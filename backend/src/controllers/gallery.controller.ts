@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { GalleryItem, type GalleryCategory } from "../models/GalleryItem.js";
+import { deleteStoredUpload, isUploadUrl } from "../utils/uploadStorage.js";
 import type { GalleryCreateInput } from "../validation/schemas.js";
 
 function serialize(item: {
@@ -24,6 +25,39 @@ function serialize(item: {
     published: item.published,
     createdAt: item.createdAt,
   };
+}
+
+/**
+ * Deletes a locally stored upload once no gallery record references it any
+ * more. Remote (http/https) URLs are never touched.
+ */
+async function removeUnreferencedUploads(urls: Array<string | undefined>): Promise<void> {
+  for (const url of new Set(urls)) {
+    if (!url || !isUploadUrl(url)) continue;
+    try {
+      const references = await GalleryItem.countDocuments({
+        $or: [{ imageUrl: url }, { videoUrl: url }],
+      });
+      if (references === 0) await deleteStoredUpload(url);
+    } catch (error) {
+      console.error(
+        "⚠️ Could not remove stored upload:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+}
+
+/**
+ * POST /api/gallery/upload — admin: stores a validated multipart file and
+ * returns its public URL for use with the normal gallery create/update flow.
+ */
+export async function uploadGalleryMedia(req: Request, res: Response): Promise<void> {
+  if (!req.upload) {
+    res.status(500).json({ success: false, message: "The file could not be saved. Please try again." });
+    return;
+  }
+  res.status(201).json({ success: true, data: req.upload });
 }
 
 /** GET /api/gallery — public: published items, optional ?category and ?limit. */
@@ -68,6 +102,9 @@ export async function createGalleryItem(req: Request, res: Response): Promise<vo
 /** PATCH /api/gallery/:id — admin: edit, publish or unpublish. */
 export async function updateGalleryItem(req: Request, res: Response): Promise<void> {
   const updates = req.body as Partial<GalleryCreateInput>;
+  const touchesMedia = updates.imageUrl !== undefined || updates.videoUrl !== undefined;
+  const previous = touchesMedia ? await GalleryItem.findById(req.params.id).lean() : null;
+
   const item = await GalleryItem.findByIdAndUpdate(
     req.params.id,
     { ...(updates.videoUrl === "" ? { videoUrl: undefined } : updates) },
@@ -77,6 +114,17 @@ export async function updateGalleryItem(req: Request, res: Response): Promise<vo
     res.status(404).json({ success: false, message: "Gallery item not found." });
     return;
   }
+
+  if (previous) {
+    const nextImageUrl = updates.imageUrl !== undefined ? updates.imageUrl : previous.imageUrl;
+    const rawVideoUrl = updates.videoUrl !== undefined ? updates.videoUrl : previous.videoUrl;
+    const nextVideoUrl = rawVideoUrl === "" ? undefined : rawVideoUrl;
+    await removeUnreferencedUploads([
+      previous.imageUrl && previous.imageUrl !== nextImageUrl ? previous.imageUrl : undefined,
+      previous.videoUrl && previous.videoUrl !== nextVideoUrl ? previous.videoUrl : undefined,
+    ]);
+  }
+
   res.json({ success: true, data: serialize({ ...item.toObject(), _id: item._id }) });
 }
 
@@ -87,5 +135,6 @@ export async function deleteGalleryItem(req: Request, res: Response): Promise<vo
     res.status(404).json({ success: false, message: "Gallery item not found." });
     return;
   }
+  await removeUnreferencedUploads([item.imageUrl, item.videoUrl]);
   res.json({ success: true, data: { id: req.params.id } });
 }

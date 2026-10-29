@@ -5,8 +5,10 @@ import {
   listAllGallery,
   listPublicGallery,
   updateGalleryItem,
+  uploadGalleryMedia,
 } from "../controllers/gallery.controller.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { receiveMediaUpload, validateUpload } from "../middleware/upload.js";
 import { validateBody } from "../middleware/validate.js";
 import { galleryCreateSchema, galleryUpdateSchema } from "../validation/schemas.js";
 
@@ -16,6 +18,14 @@ galleryRouter.get("/", listPublicGallery);
 
 // Admin
 galleryRouter.get("/all", requireAuth, requireRole("admin"), listAllGallery);
+galleryRouter.post(
+  "/upload",
+  requireAuth,
+  requireRole("admin"),
+  receiveMediaUpload,
+  validateUpload,
+  uploadGalleryMedia,
+);
 galleryRouter.post(
   "/",
   requireAuth,

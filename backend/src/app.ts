@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { env } from "./config/env.js";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { apiRouter } from "./routes/index.js";
+import { UPLOADS_ROUTE, uploadRoot } from "./utils/uploadStorage.js";
 
 export const app = express();
 
@@ -17,6 +18,25 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "1mb" }));
+
+// Uploaded media (gallery files stored on disk). Served outside `/api` so the
+// API rate limit never throttles image/video requests, and with a permissive
+// Cross-Origin-Resource-Policy so a frontend on another origin can still render
+// it. `.tmp` staging files are dotfiles and are therefore never served.
+app.use(
+  UPLOADS_ROUTE,
+  (_req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+  },
+  express.static(uploadRoot(), {
+    index: false,
+    dotfiles: "deny",
+    etag: true,
+    lastModified: true,
+    maxAge: "7d",
+  }),
+);
 
 if (env.NODE_ENV !== "test") {
   app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));

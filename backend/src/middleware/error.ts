@@ -1,6 +1,20 @@
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
 
+/**
+ * Error carrying a client-safe HTTP status and message. The response never
+ * includes filesystem paths or stack traces.
+ */
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export function notFound(_req: Request, res: Response): void {
   res.status(404).json({ success: false, message: "Route not found." });
 }
@@ -12,6 +26,12 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
+  if (error instanceof ApiError) {
+    console.error(`❌ API error ${error.status}: ${error.message}`);
+    res.status(error.status).json({ success: false, message: error.message });
+    return;
+  }
+
   if (error instanceof Error) {
     console.error("❌ API error:", error.message);
     const isValidation = error.name === "ValidationError";

@@ -84,13 +84,24 @@ export function Lightbox() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              <img
-                src={img(item.imageUrl, 1600)}
-                alt={item.alt}
-                loading="lazy"
-                decoding="async"
-                className="max-h-[70vh] w-auto max-w-full object-contain"
-              />
+              {item.type === "video" && item.videoUrl ? (
+                <video
+                  src={item.videoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  aria-label={item.alt}
+                  className="max-h-[70vh] w-auto max-w-full bg-black"
+                />
+              ) : (
+                <img
+                  src={img(item.imageUrl, 1600)}
+                  alt={item.alt}
+                  loading="lazy"
+                  decoding="async"
+                  className="max-h-[70vh] w-auto max-w-full object-contain"
+                />
+              )}
               <figcaption className="mt-4 max-w-2xl px-4 text-center text-sm text-ivory/70">
                 {item.alt}
               </figcaption>

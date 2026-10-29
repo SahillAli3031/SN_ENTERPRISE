@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ArrowRight, Info, Maximize2 } from "lucide-react";
+import { ArrowRight, Info, Maximize2, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { galleryFilters } from "../data/content";
 import { img } from "../config/images";
@@ -106,6 +106,7 @@ export function GallerySection({
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((item, index) => {
                 const featured = index === 0 && items.length > 2;
+                const isVideo = item.type === "video" && Boolean(item.videoUrl);
                 return (
                   <Reveal
                     key={item.id}
@@ -118,18 +119,39 @@ export function GallerySection({
                       aria-label={`Open ${item.title} in full screen`}
                       className="group relative block w-full overflow-hidden border border-line bg-sage text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-terracotta"
                     >
-                      <img
-                        src={img(item.imageUrl, featured ? 1200 : 768)}
-                        srcSet={`${img(item.imageUrl, 480)} 480w, ${img(item.imageUrl, 768)} 768w, ${img(item.imageUrl, 1200)} 1200w`}
-                        sizes={featured ? "(max-width: 1024px) 100vw, 66vw" : "(max-width: 640px) 100vw, 33vw"}
-                        alt={item.alt}
-                        loading="lazy"
-                        decoding="async"
-                        className={cn(
-                          "w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]",
-                          featured ? "aspect-[16/11]" : "aspect-[4/3]",
-                        )}
-                      />
+                      {isVideo ? (
+                        <video
+                          src={item.videoUrl}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          aria-label={item.alt}
+                          className={cn(
+                            "w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]",
+                            featured ? "aspect-[16/11]" : "aspect-[4/3]",
+                          )}
+                        />
+                      ) : (
+                        <img
+                          src={img(item.imageUrl, featured ? 1200 : 768)}
+                          srcSet={`${img(item.imageUrl, 480)} 480w, ${img(item.imageUrl, 768)} 768w, ${img(item.imageUrl, 1200)} 1200w`}
+                          sizes={featured ? "(max-width: 1024px) 100vw, 66vw" : "(max-width: 640px) 100vw, 33vw"}
+                          alt={item.alt}
+                          loading="lazy"
+                          decoding="async"
+                          className={cn(
+                            "w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]",
+                            featured ? "aspect-[16/11]" : "aspect-[4/3]",
+                          )}
+                        />
+                      )}
+                      {isVideo ? (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-forest/75 text-ivory">
+                            <Play size={22} aria-hidden="true" />
+                          </span>
+                        </span>
+                      ) : null}
                       <span className="absolute inset-0 bg-forest/0 transition-colors duration-500 group-hover:bg-forest/35" />
                       <span className="absolute top-4 left-4 bg-ivory/92 px-3 py-1.5 text-[0.58rem] font-semibold tracking-[0.2em] text-forest uppercase">
                         {item.category}

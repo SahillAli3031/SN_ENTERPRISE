@@ -31,6 +31,8 @@ production-ready API. Built as two independent apps:
 - `GET /api/reviews/all`, `PATCH/DELETE /api/reviews/:id` — admin moderation (JWT + role)
 - `GET /api/gallery` — public published items (category filter, pagination)
 - `GET/POST/PATCH/DELETE /api/gallery...` — admin CRUD
+- `POST /api/gallery/upload` — admin multipart upload of an image/video (`file` field),
+  stored on the server and served from `/uploads`
 - `POST /api/enquiries`, `GET /api/enquiries` — contact form intake + admin listing
 - `POST /api/auth/login`, `GET /api/auth/me` — JWT sessions, bcrypt password hashes
 - `GET /api/health` — uptime check
@@ -67,6 +69,9 @@ npm run dev                   # site on http://localhost:5173 (proxies /api -> :
 | `JWT_EXPIRES_IN` | e.g. `7d` |
 | `CORS_ORIGIN` | `http://localhost:5173` |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_NAME` | used by `npm run seed:admin` |
+| `UPLOAD_DIR` | `uploads` (relative to `backend/` working dir); created on boot |
+| `UPLOAD_MAX_IMAGE_BYTES` | `10485760` (10 MB) per image |
+| `UPLOAD_MAX_VIDEO_BYTES` | `104857600` (100 MB) per video |
 
 ### `frontend/.env`
 
@@ -82,10 +87,56 @@ npm run dev                   # site on http://localhost:5173 (proxies /api -> :
 | backend | `npm run build` / `npm start` | Compile to `dist/` / run it |
 | backend | `npm run typecheck` | `tsc --noEmit` |
 | backend | `npm run seed:admin` | Create/update the admin account |
+| backend | `npm test` | Node test runner (`tsx`): upload, media-type & gallery API tests |
 | frontend | `npm run dev` | Vite dev server |
 | frontend | `npm run build` | Typecheck + production build |
 | frontend | `npm run lint` | oxlint |
-| frontend | `npm test` | Vitest render smoke tests (jsdom) |
+| frontend | `npm test` | Vitest render + workflow tests (jsdom) |
+
+## Gallery file uploads
+
+The admin gallery dialog accepts two media methods: **Upload from device** (new) and
+**Enter URL** (unchanged). Device files are sent as multipart form data to the API and
+stored on the backend host; the existing JSON CRUD flow is used for everything else.
+
+**Endpoint** — `POST /api/gallery/upload` (JWT + `admin` role)
+
+- `multipart/form-data` with field `file` (required) and optional field `type`
+  (`image` | `video`, defaults from the detected/declared media kind)
+- Success `201` → `{ success, data: { url, fileName, mimeType, size, type } }` where `url`
+  is a **relative** path like `/uploads/1761760000000-a1b2c3d4e5f6.png`
+- The client then calls the existing `POST /api/gallery` (or `PATCH`) with that URL —
+  the JSON contract is unchanged
+- Errors: `401/403` auth, `415` unsupported or mismatched file kind, `413` over limit,
+  `400` malformed multipart; messages never contain filesystem paths
+
+**Supported formats & limits** (detected from magic bytes, not just the extension)
+
+| Kind | Types | Default limit |
+| --- | --- | --- |
+| image | JPEG, PNG, WebP, GIF, AVIF | 10 MB (`UPLOAD_MAX_IMAGE_BYTES`) |
+| video | MP4, WebM (QuickTime `.mov` accepted) | 100 MB (`UPLOAD_MAX_VIDEO_BYTES`) |
+
+HEIC/HEIF and everything else is rejected. The file picker's `accept` attribute and the
+client-side check mirror these lists/limits (see `frontend/src/config/uploads.ts`).
+
+**Storage**
+
+- Files land in `<UPLOAD_DIR>` (default `backend/uploads/`) under a server-generated
+  name (`<timestamp>-<random>.<ext>`) — client filenames are never trusted; temp
+  files live in `uploads/.tmp` and are cleaned up on failure and on boot
+- Served by Express at `GET /uploads/<name>` (outside the `/api` rate limiter, no
+  directory listings, `Cross-Origin-Resource-Policy: cross-origin`)
+- Deleting a gallery item, or replacing its media URL, deletes the file when no other
+  item references it
+- **Local disk storage is not guaranteed to persist across redeployments** — there is
+  no cloud storage (e.g. Cloudinary) wired in, so back up `uploads/` or add object
+  storage before relying on it in production
+
+**Development**: the Vite dev server proxies `/uploads` to `http://localhost:5000`
+(same as `/api`). **Production**: serve `/uploads` from the same origin as the site
+(e.g. a reverse-proxy `location /uploads/` to the API, or copy the directory into the
+web root); relative URLs keep the gallery working on any origin.
 
 ## Project structure
 

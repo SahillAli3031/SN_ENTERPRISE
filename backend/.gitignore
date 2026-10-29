@@ -5,3 +5,4 @@ dist/
 server.out.log
 server.err.log
 server.pid
+uploads/

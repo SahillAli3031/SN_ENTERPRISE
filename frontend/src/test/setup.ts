@@ -18,6 +18,12 @@ if (!window.matchMedia) {
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 Element.prototype.scrollIntoView = vi.fn();
 
+/** jsdom does not implement object URLs (used for file previews). */
+if (typeof URL.createObjectURL !== "function") {
+  URL.createObjectURL = vi.fn(() => `blob:mock/${Math.random().toString(36).slice(2)}`);
+  URL.revokeObjectURL = vi.fn();
+}
+
 /** jsdom lacks IntersectionObserver / ResizeObserver (used by framer-motion). */
 class IntersectionObserverStub {
   readonly root = null;

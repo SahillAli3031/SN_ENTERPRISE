@@ -95,7 +95,11 @@ export async function fetchAllGallery(): Promise<GalleryItem[]> {
   }
 }
 
-/** POST /api/gallery — admin: creates an item from an image URL (no file upload exists). */
+/**
+ * POST /api/gallery — admin: creates an item from media URLs. Files chosen on
+ * the device are uploaded first with `uploadGalleryMedia`, whose URL is then
+ * saved here.
+ */
 export async function createGalleryItem(payload: Partial<GalleryItem>): Promise<GalleryItem> {
   try {
     const { data } = await api.post<ApiEnvelope<RawGalleryItem>>("/gallery", payload, {
@@ -128,5 +132,45 @@ export async function deleteGalleryItem(id: string): Promise<void> {
     await api.delete(`/gallery/${id}`, { requiresAuth: true });
   } catch (error) {
     throw new Error(getErrorMessage(error, "The gallery item could not be deleted."));
+  }
+}
+
+/** Media stored by `POST /api/gallery/upload` — its URL feeds the normal create/update flow. */
+export interface UploadedMedia {
+  url: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  type: "image" | "video";
+}
+
+/**
+ * POST /api/gallery/upload — admin: sends one image/video file as
+ * `multipart/form-data` and returns the stored public URL. `onUploadProgress`
+ * receives 0–100 when the browser reports progress.
+ */
+export async function uploadGalleryMedia(
+  file: File,
+  type: "image" | "video",
+  onUploadProgress?: (percent: number) => void,
+): Promise<UploadedMedia> {
+  try {
+    const formData = new FormData();
+    formData.append("type", type);
+    formData.append("file", file, file.name);
+    const { data } = await api.post<ApiEnvelope<UploadedMedia>>("/gallery/upload", formData, {
+      requiresAuth: true,
+      // Overrides the JSON default so the browser can add the multipart boundary.
+      headers: { "Content-Type": "multipart/form-data" },
+      // Large videos must outlive the shared 15s client timeout.
+      timeout: 0,
+      onUploadProgress: (event) => {
+        if (!onUploadProgress || !event.total) return;
+        onUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+      },
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error, "The file could not be uploaded."));
   }
 }
