@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+server.out.log
+server.err.log
+server.pid
