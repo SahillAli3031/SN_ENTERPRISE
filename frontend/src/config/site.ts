@@ -9,10 +9,10 @@ export interface NavLink {
 }
 
 export const siteConfig = {
-  name: "Verdant & Co.",
-  fullName: "Verdant & Co. Painters",
+  name: "S N Enterprise",
+  fullName: "S N Enterprise",
   /** Short mark rendered inside the logo tile. */
-  monogram: "VC",
+  monogram: "SN",
   tagline: "Painters & Decorators",
   description:
     "Thoughtful interior and exterior painting, quality finishes and craftsmanship designed to transform your space.",
@@ -21,13 +21,12 @@ export const siteConfig = {
 
   contact: {
     /** Display + href for the phone number. Leave empty to hide phone links. */
-    phoneDisplay: "+1 (555) 000-0000",
-    phoneHref: "tel:+15550000000",
-    /** Placeholder address — replace with the real business address. */
-    address: "128 Alder Street, Suite 4\nPortland, OR 97204",
-    /** Placeholder mailbox (reserved .example TLD — clearly not a live inbox). */
-    email: "hello@verdantandco.example",
-    hours: "Monday – Saturday, 8:00 – 18:00",
+    phoneDisplay: "6290220744",
+    phoneHref: "tel:6290220744",
+    /** Official business address. */
+    address: "Rajarhat, North 24 PGS, West Bengal, India",
+    /** Official business email. */
+    email: "snenterprise1602@gmail.com",
     /**
      * WhatsApp business number in international format WITHOUT "+" or spaces,
      * e.g. "15551234567". Leave empty until a genuine business number exists —

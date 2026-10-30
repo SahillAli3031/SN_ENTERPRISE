@@ -32,7 +32,7 @@ describe("app routes render", () => {
   it("shows the brand and primary navigation", () => {
     window.history.pushState({}, "", "/");
     render(<App />);
-    expect(screen.getAllByLabelText(/Verdant & Co\. Painters — home/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByLabelText(/S N Enterprise — home/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("navigation", { name: /primary/i })).toBeTruthy();
     expect(screen.getAllByRole("link", { name: /get a free quote/i }).length).toBeGreaterThan(0);
   });

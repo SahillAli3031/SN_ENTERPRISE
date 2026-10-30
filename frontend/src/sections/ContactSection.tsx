@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CircleAlert, CircleCheck, Clock, Mail, MapPin, Phone } from "lucide-react";
+import { CircleAlert, CircleCheck, Mail, MapPin, Phone } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -153,7 +153,7 @@ export function ContactSection({ showImage = true }: ContactSectionProps) {
                 </span>
                 <div>
                   <span className="block text-[0.65rem] font-semibold tracking-[0.2em] text-warm-gray uppercase">
-                    Studio
+                    Address
                   </span>
                   <span className="whitespace-pre-line font-serif text-lg text-forest">
                     {siteConfig.contact.address}
@@ -161,17 +161,6 @@ export function ContactSection({ showImage = true }: ContactSectionProps) {
                 </div>
               </li>
             ) : null}
-            <li className="flex items-start gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[6px] border border-forest/20 bg-ivory text-forest">
-                <Clock size={16} strokeWidth={1.6} />
-              </span>
-              <div>
-                <span className="block text-[0.65rem] font-semibold tracking-[0.2em] text-warm-gray uppercase">
-                  Hours
-                </span>
-                <span className="font-serif text-lg text-forest">{siteConfig.contact.hours}</span>
-              </div>
-            </li>
           </ul>
 
           {whatsappNumber ? (
@@ -246,7 +235,7 @@ export function ContactSection({ showImage = true }: ContactSectionProps) {
                       id="phone"
                       type="tel"
                       autoComplete="tel"
-                      placeholder="+1 555 000 0000"
+                      placeholder="6290220744"
                       className={cn(fieldClasses, errors.phone && "border-terracotta")}
                       aria-invalid={!!errors.phone}
                       {...register("phone")}

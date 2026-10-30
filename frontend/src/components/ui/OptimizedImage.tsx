@@ -40,7 +40,7 @@ export function OptimizedImage({
           aria-hidden="true"
         >
           <span className="font-serif text-sm tracking-[0.2em] text-forest/60 uppercase">
-            Verdant &amp; Co.
+            S N Enterprise
           </span>
         </div>
       ) : (
