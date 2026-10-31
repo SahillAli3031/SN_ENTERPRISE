@@ -41,13 +41,14 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const {
     register,
     handleSubmit,
     setValue,
     watch,
-    reset,
     formState: { errors },
   } = useForm<ReviewFormValues>({
     resolver: zodResolver(reviewSchema),
@@ -62,7 +63,7 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
     setStatus("idle");
     setMessage("");
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -71,7 +72,7 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const onSubmit = async (values: ReviewFormValues) => {
     setStatus("loading");
@@ -79,8 +80,6 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
     try {
       await submitReview(values);
       setStatus("success");
-      setMessage("Thank you — your review has been received. It will appear once approved.");
-      reset({ name: "", email: "", rating: 0, comment: "" });
       onSubmitted?.();
     } catch (error) {
       setStatus("error");
