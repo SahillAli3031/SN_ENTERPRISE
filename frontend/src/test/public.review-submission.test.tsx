@@ -16,12 +16,12 @@ describe("public review submission", () => {
     vi.mocked(submitReview).mockReset();
   });
 
-  it("explains that reviews are read by the team before publishing", () => {
+  it("explains that reviews will appear publicly after submission", () => {
     render(<ReviewFormModal open onClose={() => undefined} />);
-    expect(screen.getByText(/reviews are read by our team before they are published/i)).toBeTruthy();
+    expect(screen.getByText(/Your review will appear publicly after submission/i)).toBeTruthy();
   });
 
-  it("submits the review payload and shows the pending-moderation message", async () => {
+  it("submits the review and shows the thank you success message", async () => {
     vi.mocked(submitReview).mockResolvedValue(undefined);
     const onSubmitted = vi.fn();
     render(<ReviewFormModal open onClose={() => undefined} onSubmitted={onSubmitted} />);
@@ -34,10 +34,8 @@ describe("public review submission", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Submit Review" }));
 
-    expect(await screen.findByText(/review received/i)).toBeTruthy();
-    expect(
-      await screen.findByText(/it will appear once approved/i),
-    ).toBeTruthy();
+    expect(await screen.findByText(/Thank You for Your Feedback!/i)).toBeTruthy();
+    expect(await screen.findByText(/Your review has been submitted successfully/i)).toBeTruthy();
     expect(submitReview).toHaveBeenCalledWith({
       name: "Jane Doe",
       email: "jane@example.com",
@@ -58,7 +56,7 @@ describe("public review submission", () => {
   });
 
   it("surfaces API errors inside the modal", async () => {
-    vi.mocked(submitReview).mockRejectedValue(new Error("Review moderation is temporarily down."));
+    vi.mocked(submitReview).mockRejectedValue(new Error("Review submission is temporarily down."));
     render(<ReviewFormModal open onClose={() => undefined} />);
 
     fireEvent.click(screen.getByRole("radio", { name: "4 stars" }));
@@ -69,7 +67,7 @@ describe("public review submission", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Submit Review" }));
 
-    expect(await screen.findByText("Review moderation is temporarily down.")).toBeTruthy();
-    expect(screen.queryByText(/review received/i)).toBeNull();
+    expect(await screen.findByText("Review submission is temporarily down.")).toBeTruthy();
+    expect(screen.queryByText(/Thank You for Your Feedback!/i)).toBeNull();
   });
 });

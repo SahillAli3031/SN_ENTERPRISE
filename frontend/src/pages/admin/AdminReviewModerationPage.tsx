@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Check, CircleAlert, EyeOff, RotateCcw, Trash, type LucideIcon } from "lucide-react";
+import { CircleAlert, Eye, EyeOff, Trash, type LucideIcon } from "lucide-react";
 import { deleteReview, fetchAdminReviews, updateReviewStatus } from "../../api/reviews";
 import { getErrorMessage } from "../../api/client";
 import { ConfirmDialog } from "../../components/admin/ConfirmDialog";
@@ -8,18 +8,17 @@ import { Spinner } from "../../components/ui/Spinner";
 import { StarRating } from "../../components/ui/StarRating";
 import type { AdminReview, ReviewStatus } from "../../types";
 
-type Tab = ReviewStatus | "all";
+type Tab = "approved" | "hidden" | "all";
 
 const tabs: Array<{ key: Tab; label: string }> = [
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
+  { key: "approved", label: "Visible" },
   { key: "hidden", label: "Hidden" },
   { key: "all", label: "All" },
 ];
 
 const statusLabels: Record<ReviewStatus, string> = {
   pending: "Pending",
-  approved: "Approved",
+  approved: "Visible",
   hidden: "Hidden",
 };
 
@@ -60,22 +59,6 @@ interface ReviewAction {
 
 function actionProps(review: AdminReview): ReviewAction[] {
   const actions: ReviewAction[] = [];
-  if (review.status !== "approved") {
-    actions.push({
-      key: "approve",
-      label: `Approve review from ${review.name}`,
-      status: "approved",
-      icon: Check,
-    });
-  }
-  if (review.status !== "pending") {
-    actions.push({
-      key: "requeue",
-      label: `Requeue review from ${review.name}`,
-      status: "pending",
-      icon: RotateCcw,
-    });
-  }
   if (review.status !== "hidden") {
     actions.push({
       key: "hide",
@@ -83,13 +66,20 @@ function actionProps(review: AdminReview): ReviewAction[] {
       status: "hidden",
       icon: EyeOff,
     });
+  } else {
+    actions.push({
+      key: "unhide",
+      label: `Unhide review from ${review.name}`,
+      status: "approved",
+      icon: Eye,
+    });
   }
   return actions;
 }
 
-/** /admin/reviews — approve, hide, requeue and delete customer reviews. */
+/** /admin/reviews — hide, unhide and delete customer reviews. */
 export function AdminReviewModerationPage() {
-  const [tab, setTab] = useState<Tab>("pending");
+  const [tab, setTab] = useState<Tab>("approved");
   const [rows, setRows] = useState<AdminReview[] | null>(null);
   /** Which tab `rows` belongs to — prevents showing stale rows from another tab. */
   const [loadedTab, setLoadedTab] = useState<Tab | null>(null);
@@ -137,13 +127,12 @@ export function AdminReviewModerationPage() {
     }
   };
 
-  return (
+return (
     <div>
       <span className="eyebrow">Moderation</span>
       <h1 className="display-heading mt-4 text-3xl text-forest sm:text-4xl">Reviews</h1>
       <p className="mt-3 max-w-2xl text-sm leading-relaxed text-warm-gray">
-        Approve, hide, requeue or remove customer reviews. Only approved reviews are shown on the
-        public site.
+        Hide or unhide customer reviews. Only visible reviews are shown on the public site.
       </p>
 
       <div className="mt-7 flex flex-wrap gap-2" role="group" aria-label="Filter reviews by status">
@@ -197,7 +186,7 @@ export function AdminReviewModerationPage() {
                   <th scope="col" className="px-5 py-3.5 font-semibold">
                     Status
                   </th>
-                  <th scope="col" className="px-5 py-3.5 font-semibold">
+                  <th scope="col" className="px-5 py-3.5">
                     Received
                   </th>
                   <th scope="col" className="px-5 py-3.5 text-right font-semibold">
@@ -257,7 +246,7 @@ export function AdminReviewModerationPage() {
             onClick={() => void load(tab)}
             className="inline-flex items-center gap-2 rounded-full border border-forest/35 px-5 py-2.5 text-[0.7rem] font-semibold tracking-[0.16em] text-forest uppercase transition-colors hover:border-forest hover:bg-forest hover:text-ivory"
           >
-            <RotateCcw size={14} aria-hidden="true" />
+            <EyeOff size={14} aria-hidden="true" />
             Try again
           </button>
         ) : (

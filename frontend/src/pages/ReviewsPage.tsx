@@ -8,7 +8,7 @@ export function ReviewsPage() {
       <PageHeader
         eyebrow="Reviews"
         title="Feedback from the people we have worked with."
-        description="Only reviews approved by our team are published. Submitted reviews are checked before they appear."
+        description="Every review submitted through our site is now published automatically. Your voice helps other homeowners and businesses choose with confidence."
       />
       <ReviewsSection />
       <CtaBand

@@ -75,7 +75,7 @@ function seedReviews(): Array<Record<string, unknown>> {
       email: "alice@example.com",
       rating: 5,
       comment: "Wonderful work throughout the house.",
-      status: "pending",
+      status: "approved",
       createdAt: "2026-01-05T10:00:00.000Z",
     },
     {
@@ -84,7 +84,7 @@ function seedReviews(): Array<Record<string, unknown>> {
       email: "bob@example.com",
       rating: 4,
       comment: "Very neat and tidy painters.",
-      status: "approved",
+      status: "hidden",
       createdAt: "2026-01-04T10:00:00.000Z",
     },
     {
@@ -93,7 +93,7 @@ function seedReviews(): Array<Record<string, unknown>> {
       email: "cara@example.com",
       rating: 3,
       comment: "The start was delayed a little.",
-      status: "hidden",
+      status: "approved",
       createdAt: "2026-01-03T10:00:00.000Z",
     },
   ];
@@ -119,57 +119,60 @@ describe("AdminReviewModerationPage", () => {
     authenticate();
   });
 
-  it("loads pending reviews with the admin Bearer token", async () => {
+  it("loads visible reviews by default with the admin Bearer token", async () => {
     render(<AdminReviewModerationPage />);
 
     expect(await screen.findByText("Alice")).toBeTruthy();
     expect(screen.queryByText("Bob")).toBeNull();
-    expect(screen.queryByText("Cara")).toBeNull();
+    expect(await screen.findByText("Cara")).toBeTruthy();
 
     expect(recorded[0].url).toBe("/reviews/all");
-    expect(recorded[0].statusParam).toBe("pending");
+    expect(recorded[0].statusParam).toBe("approved");
     expect(recorded[0].auth).toBe("Bearer admin-token");
   });
 
-  it("approves a pending review", async () => {
+  it("shows hidden reviews when the Hidden tab is selected", async () => {
     render(<AdminReviewModerationPage />);
-    fireEvent.click(await screen.findByRole("button", { name: "Approve review from Alice" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Hidden" }));
+    expect(await screen.findByText("Bob")).toBeTruthy();
+
+    expect(recorded.find((request) => request.statusParam === "hidden")).toBeTruthy();
+  });
+
+  it("shows all reviews when the All tab is selected", async () => {
+    render(<AdminReviewModerationPage />);
+    fireEvent.click(await screen.findByRole("button", { name: "All" }));
+    expect(await screen.findByText("Alice")).toBeTruthy();
+    expect(await screen.findByText("Bob")).toBeTruthy();
+    expect(await screen.findByText("Cara")).toBeTruthy();
+  });
+
+  it("hides a visible review", async () => {
+    render(<AdminReviewModerationPage />);
+    await screen.findByText("Alice");
+    fireEvent.click(screen.getByRole("button", { name: "Hide review from Alice" }));
 
     await waitFor(() => {
       const patch = recorded.find((request) => request.method === "patch");
       expect(patch?.url).toBe("/reviews/r1");
-      expect(patch?.body).toEqual({ status: "approved" });
+      expect(patch?.body).toEqual({ status: "hidden" });
       expect(patch?.auth).toBe("Bearer admin-token");
     });
-    // The pending queue is refetched — Alice is no longer pending.
     await waitFor(() => expect(screen.queryByText("Alice")).toBeNull());
   });
 
-  it("hides an approved review from the Approved tab", async () => {
+  it("unhides a hidden review", async () => {
     render(<AdminReviewModerationPage />);
-    fireEvent.click(await screen.findByRole("button", { name: "Approved" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Hidden" }));
     expect(await screen.findByText("Bob")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Hide review from Bob" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unhide review from Bob" }));
     await waitFor(() => {
       const patch = recorded.find((request) => request.method === "patch");
       expect(patch?.url).toBe("/reviews/r2");
-      expect(patch?.body).toEqual({ status: "hidden" });
+      expect(patch?.body).toEqual({ status: "approved" });
     });
     await waitFor(() => expect(screen.queryByText("Bob")).toBeNull());
-  });
-
-  it("requeues a hidden review from the Hidden tab", async () => {
-    render(<AdminReviewModerationPage />);
-    fireEvent.click(await screen.findByRole("button", { name: "Hidden" }));
-    expect(await screen.findByText("Cara")).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("button", { name: "Requeue review from Cara" }));
-    await waitFor(() => {
-      const patch = recorded.find((request) => request.method === "patch");
-      expect(patch?.url).toBe("/reviews/r3");
-      expect(patch?.body).toEqual({ status: "pending" });
-    });
   });
 
   it("deletes a review only after confirmation", async () => {

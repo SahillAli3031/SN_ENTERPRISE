@@ -41,10 +41,10 @@ export async function listPublicReviews(_req: Request, res: Response): Promise<v
 /** POST /api/reviews — public: stored as pending until approved. */
 export async function createReview(req: Request, res: Response): Promise<void> {
   const payload = req.body as ReviewCreateInput;
-  const review = await Review.create({ ...payload, status: "pending" });
+  const review = await Review.create({ ...payload, status: "approved" });
   res.status(201).json({
     success: true,
-    message: "Review received. It will appear once approved.",
+    message: "Your review has been submitted successfully.",
     data: { id: review.id },
   });
 }

@@ -131,7 +131,7 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
               Write a Review
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-warm-gray">
-              Reviews are read by our team before they are published on the site.
+              Your review will appear publicly after submission.
             </p>
 
             {status === "success" ? (
@@ -139,8 +139,10 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
                 <div className="flex items-start gap-3">
                   <CircleCheck size={20} className="mt-0.5 shrink-0 text-forest" />
                   <div>
-                    <p className="text-sm font-semibold text-forest">Review received</p>
-                    <p className="mt-1 text-sm text-warm-gray">{message}</p>
+                    <p className="text-sm font-semibold text-forest">Thank You for Your Feedback!</p>
+                    <p className="mt-1 text-sm text-warm-gray">
+                      Your review has been submitted successfully. We truly appreciate you taking the time to share your experience with S N Enterprise.
+                    </p>
                   </div>
                 </div>
                 <button
@@ -148,7 +150,7 @@ export function ReviewFormModal({ open, onClose, onSubmitted }: ReviewFormModalP
                   onClick={onClose}
                   className="mt-5 rounded-full bg-forest px-6 py-2.5 text-[0.72rem] font-semibold tracking-[0.16em] text-ivory uppercase transition-colors hover:bg-forest-dark"
                 >
-                  Close
+                  OK
                 </button>
               </div>
             ) : (

@@ -21,7 +21,7 @@ const reviewSchema = new Schema<ReviewAttrs>(
     status: {
       type: String,
       enum: ["pending", "approved", "hidden"],
-      default: "pending",
+      default: "approved",
       index: true,
     },
   },
