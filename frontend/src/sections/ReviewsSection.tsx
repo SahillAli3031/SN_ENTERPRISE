@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { CircleAlert, PencilLine, RefreshCw } from "lucide-react";
 import { fetchPublishedReviews } from "../api/reviews";
 import { ReviewFormModal } from "../components/reviews/ReviewFormModal";
+import { ReadMoreModal } from "../components/reviews/ReadMoreModal";
+import { ReviewCard } from "../components/reviews/ReviewCard";
 import { Button } from "../components/ui/Button";
 import { Reveal } from "../components/ui/Reveal";
 import { SectionHeading } from "../components/ui/SectionHeading";
@@ -16,24 +18,13 @@ interface ReviewsSectionProps {
 
 type Status = "loading" | "success" | "error";
 
-const dateFormatter = new Intl.DateTimeFormat("en", {
-  month: "long",
-  year: "numeric",
-});
-
-function formatDate(value?: string): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return dateFormatter.format(date);
-}
-
 /** Customer reviews loaded from the API, with loading/error/empty states. */
 export function ReviewsSection({ limit }: ReviewsSectionProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [status, setStatus] = useState<Status>("loading");
   const [error, setError] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [readMoreReview, setReadMoreReview] = useState<Review | null>(null);
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -137,25 +128,9 @@ export function ReviewsSection({ limit }: ReviewsSectionProps) {
               </div>
             </div>
           ) : (
-            <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3">
-              {visible.map((review, index) => (
-                <Reveal key={review.id} delay={(index % 3) * 0.07}>
-                  <article className="flex h-full flex-col border border-line bg-soft-white p-7 transition-colors duration-300 hover:border-forest/35">
-                    <div className="flex items-center justify-between gap-4">
-                      <StarRating rating={review.rating} size={16} />
-                      <span className="text-xs text-warm-gray">{formatDate(review.createdAt)}</span>
-                    </div>
-                    <p className="mt-5 flex-1 text-[0.95rem] leading-relaxed text-charcoal">
-                      “{review.comment}”
-                    </p>
-                    <div className="mt-6 flex items-center gap-3 border-t border-line pt-5">
-                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-sage font-serif text-sm text-forest">
-                        {review.name.trim().charAt(0).toUpperCase()}
-                      </span>
-                      <span className="font-serif text-lg text-forest">{review.name}</span>
-                    </div>
-                  </article>
-                </Reveal>
+            <div className="grid gap-7 md:grid-cols-2 lg:grid-cols-3" style={{ minHeight: 280 }}>
+              {visible.map((review) => (
+                <ReviewCard key={review.id} review={review} onReadMore={setReadMoreReview} />
               ))}
             </div>
           )}
@@ -171,6 +146,7 @@ export function ReviewsSection({ limit }: ReviewsSectionProps) {
       </div>
 
       <ReviewFormModal open={modalOpen} onClose={() => setModalOpen(false)} onSubmitted={load} />
+      <ReadMoreModal open={!!readMoreReview} onClose={() => setReadMoreReview(null)} review={readMoreReview ?? undefined} />
       {status === "loading" && reviews.length === 0 ? <Spinner className="sr-only" /> : null}
     </section>
   );
