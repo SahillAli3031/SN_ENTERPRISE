@@ -155,7 +155,7 @@ export function ContactSection({ showImage = true }: ContactSectionProps) {
                   <span className="block text-[0.65rem] font-semibold tracking-[0.2em] text-warm-gray uppercase">
                     Address
                   </span>
-                  <span className="whitespace-pre-line font-serif text-lg text-forest">
+                  <span className="whitespace-pre-line break-all font-serif text-lg text-forest">
                     {siteConfig.contact.address}
                   </span>
                 </div>

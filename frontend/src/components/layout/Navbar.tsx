@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Menu, Phone, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -14,6 +14,7 @@ export function Navbar() {
   const reduceMotion = useReducedMotion();
   const location = useLocation();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -29,6 +30,20 @@ export function Navbar() {
     setMenuOpen(false);
   }
 
+  // Close the mobile menu when clicking outside of it.
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
+      if (!menuOpen) return;
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+      if (menuButtonRef.current && !menuButtonRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    },
+    [menuOpen],
+  );
+
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     const onKey = (event: KeyboardEvent) => {
@@ -37,12 +52,14 @@ export function Navbar() {
         menuButtonRef.current?.focus();
       }
     };
+    window.addEventListener("mousedown", handleClickOutside);
     window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = "";
+      window.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("keydown", onKey);
     };
-  }, [menuOpen]);
+  }, [menuOpen, handleClickOutside]);
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
     cn(
@@ -100,14 +117,15 @@ export function Navbar() {
       <AnimatePresence>
         {menuOpen ? (
           <motion.div
+            ref={menuRef}
             id="mobile-menu"
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-x-0 top-20 bottom-0 overflow-y-auto border-t border-line bg-ivory px-5 pt-6 pb-12 lg:hidden"
+            className="fixed inset-x-0 top-20 max-h-[calc(100dvh-5rem)] overflow-y-auto overflow-x-hidden border-t border-line bg-ivory px-5 pt-6 pb-12 lg:hidden z-[100]"
           >
-            <nav aria-label="Mobile" className="flex flex-col divide-y divide-line">
+            <nav aria-label="Mobile" role="menu" className="flex flex-col divide-y divide-line">
               {siteConfig.nav.map((item, index) => (
                 <motion.div
                   key={item.to}

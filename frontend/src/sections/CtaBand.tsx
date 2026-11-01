@@ -24,7 +24,7 @@ export function CtaBand({
           </div>
           <Link
             to={siteConfig.cta.to}
-            className="group inline-flex shrink-0 items-center gap-3 rounded-full bg-terracotta px-8 py-4 text-[0.75rem] font-semibold tracking-[0.18em] text-white uppercase transition-colors hover:bg-terracotta-dark"
+            className="group inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-full bg-terracotta px-8 py-4 text-[0.75rem] font-semibold tracking-[0.18em] text-white uppercase transition-colors hover:bg-terracotta-dark"
           >
             {siteConfig.cta.label}
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />

@@ -111,7 +111,7 @@ export function Footer() {
               {siteConfig.contact.address ? (
                 <li className="flex items-start gap-3 whitespace-pre-line">
                   <MapPin size={15} className="mt-0.5 shrink-0" strokeWidth={1.6} />
-                  <span>{siteConfig.contact.address}</span>
+                  <span className="break-all">{siteConfig.contact.address}</span>
                 </li>
               ) : null}
             </ul>

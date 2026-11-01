@@ -20,7 +20,7 @@ export function AboutSection({ reverse = false, expanded = false }: AboutSection
     <section className="py-20 sm:py-24">
       <div className="page-container grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
         <Reveal from={reverse ? "right" : "left"} className={reverse ? "lg:order-2" : undefined}>
-          <div className="relative">
+          <div className="relative overflow-hidden">
             <OptimizedImage
               src={images.about.primary}
               alt="Living room with sage green walls, rattan lighting and layered textiles"
